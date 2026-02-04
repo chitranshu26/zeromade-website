@@ -40,7 +40,12 @@ async function request<T>(
   return data;
 }
 
+/* ========================
+   API METHODS
+======================== */
+
 export const api = {
+  /* AUTH */
   register: (body: any) =>
     request("/api/auth/register", {
       method: "POST",
@@ -56,18 +61,55 @@ export const api = {
   logout: () =>
     request("/api/auth/logout", { method: "POST" }),
 
+  getMe: () =>
+    request<{ success: boolean; user: ApiUser }>("/api/auth/me"),
+
+  /* PRODUCTS */
   getProducts: () =>
-    request<{ success: boolean; data: ApiProduct[] }>(
-      "/api/products"
-    ),
+    request<{ success: boolean; data: ApiProduct[] }>("/api/products"),
 
   getProduct: (id: string) =>
     request<{ success: boolean; data: ApiProduct }>(
       `/api/products/${id}`
     ),
+
+  createProduct: (body: Partial<ApiProduct>) =>
+    request("/api/products", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  updateProduct: (id: string, body: Partial<ApiProduct>) =>
+    request(`/api/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+
+  deleteProduct: (id: string) =>
+    request(`/api/products/${id}`, {
+      method: "DELETE",
+    }),
+
+  /* MATERIALS */
+  getMaterials: () =>
+    request<{ success: boolean; data: ApiMaterial[] }>(
+      "/api/materials"
+    ),
+
+  createMaterial: (body: Partial<ApiMaterial>) =>
+    request("/api/materials", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  /* USERS */
+  getUsers: () =>
+    request<{ success: boolean; data: ApiUser[] }>("/api/users"),
 };
 
-/* TYPES */
+/* ========================
+   TYPES
+======================== */
 
 export type ApiProduct = {
   _id: string;
@@ -75,9 +117,32 @@ export type ApiProduct = {
   price: number;
   images: string[];
   slug?: string;
+  category?: string;
+  size?: string[];
+  color?: string[];
+  material?: ApiMaterial | string | null;
+  stock?: number;
+  createdAt?: string;
 };
 
-/* IMPORTANT EXPORT */
+export type ApiMaterial = {
+  _id: string;
+  name: string;
+  description?: string;
+  createdAt?: string;
+};
+
+export type ApiUser = {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt?: string;
+};
+
+/* ========================
+   PRODUCT MAPPER
+======================== */
 
 export function toProduct(p: ApiProduct) {
   return {
