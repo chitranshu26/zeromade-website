@@ -1,7 +1,3 @@
-/**
- * API client for Zeromade backend.
- */
-
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://zeromade-website.onrender.com";
@@ -26,48 +22,32 @@ async function request<T>(
     );
   }
 
-  let res: Response;
-
-  try {
-    res = await fetch(url.toString(), {
-      ...init,
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(init.headers as Record<string, string>),
-      },
-    });
-  } catch {
-    throw new Error("Could not connect to backend");
-  }
+  const res = await fetch(url.toString(), {
+    ...init,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+  });
 
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(
-      (data as { message?: string }).message || "Request failed"
-    );
+    throw new Error(data.message || "Request failed");
   }
 
-  return data as T;
+  return data;
 }
 
 export const api = {
-  register: (body: {
-    name: string;
-    email: string;
-    password: string;
-  }) =>
+  register: (body: any) =>
     request("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  login: (body: {
-    email: string;
-    password: string;
-    role: "user" | "admin";
-  }) =>
+  login: (body: any) =>
     request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(body),
@@ -80,9 +60,14 @@ export const api = {
     request<{ success: boolean; data: ApiProduct[] }>(
       "/api/products"
     ),
+
+  getProduct: (id: string) =>
+    request<{ success: boolean; data: ApiProduct }>(
+      `/api/products/${id}`
+    ),
 };
 
-/* ================= TYPES ================= */
+/* TYPES */
 
 export type ApiProduct = {
   _id: string;
@@ -92,15 +77,14 @@ export type ApiProduct = {
   slug?: string;
 };
 
-/* ================= MAPPER ================= */
+/* IMPORTANT EXPORT */
 
 export function toProduct(p: ApiProduct) {
   return {
     id: p._id,
     name: p.name,
     price: p.price,
-    image:
-      p.images?.[0] || "/products/hoodie1.png",
+    image: p.images?.[0] || "/products/hoodie1.png",
     slug: p.slug || p._id,
   };
 }
